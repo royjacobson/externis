@@ -21,6 +21,9 @@
 #include <unistd.h>
 
 namespace externis {
+
+constexpr int MINIMUM_EVENT_LENGTH_NS = 1000000; // 0.1ms
+
 namespace {
 
 json::object *output_json;
@@ -73,6 +76,9 @@ void add_event(const TraceEvent &event) {
   static int pid = getpid();
   static int tid = 0;
   static int UID = 0;
+  if ((event.ts.end - event.ts.start) < MINIMUM_EVENT_LENGTH_NS) {
+    return;
+  }
   int this_uid = UID++;
   output_events_list->append(
       new_event(event, pid, tid, event.ts.start, "B", this_uid));

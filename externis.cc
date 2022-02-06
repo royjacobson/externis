@@ -92,15 +92,17 @@ void cb_pass_execution(void *gcc_data, void *user_data) {
   start_opt_pass(pass);
 }
 
+void cb_finish_decl(void *gcc_data, void *user_data) {
+  finish_preprocessing_stage();
+}
+
 } // namespace externis
 
 static const char *PLUGIN_NAME = "externis";
 
 bool setup_output(int argc, plugin_argument *argv) {
   const char *flag_name = "trace";
-  // TODO: If no trace file is provided, use normal output with .json
-  // added or something else predictable. (Clang are replacing suffix with
-  // .json)
+  // TODO: Maybe make the default filename related to the source filename.
   // TODO: Validate we only compile one TU at a time.
   FILE *trace_file = nullptr;
   if (argc == 0) {
@@ -153,6 +155,8 @@ int plugin_init(struct plugin_name_args *plugin_info,
                     &externis::cb_pass_execution, nullptr);
   register_callback(PLUGIN_NAME, PLUGIN_START_UNIT,
                     &externis::cb_start_compilation, nullptr);
+  register_callback(PLUGIN_NAME, PLUGIN_FINISH_DECL,
+                    &externis::cb_finish_decl, nullptr);
   register_callback(PLUGIN_NAME, PLUGIN_INFO, nullptr, &externis_info);
   return 0;
 }

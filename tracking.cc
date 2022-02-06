@@ -38,13 +38,6 @@ std::stack<std::string> preprocessing_stack;
 
 TimeStamp last_function_parsed_ts;
 
-void finish_preprocessing_stage() {
-  while (!preprocessing_stack.empty()) {
-    end_preprocess_file();
-    last_function_parsed_ts = ns_from_start();
-  }
-}
-
 struct OptPassEvent {
   const opt_pass *pass;
   TimeSpan ts;
@@ -109,6 +102,13 @@ std::vector<FunctionEvent> function_events;
 
 } // namespace
 
+void finish_preprocessing_stage() {
+  while (!preprocessing_stack.empty()) {
+    end_preprocess_file();
+    last_function_parsed_ts = ns_from_start();
+  }
+}
+
 void start_preprocess_file(const char *file_name, cpp_reader *pfile) {
   auto now = ns_from_start();
   if (!strcmp(file_name, "<command-line>")) {
@@ -148,6 +148,7 @@ void end_preprocess_file() {
     preprocess_end[preprocessing_stack.top()] = now;
   }
   preprocessing_stack.pop();
+  last_function_parsed_ts = now + 3;
 }
 
 void write_preprocessing_events() {
