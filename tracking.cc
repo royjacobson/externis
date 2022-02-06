@@ -19,7 +19,6 @@
 
 #include "externis.h"
 
-#include <fmt/core.h>
 #include <stack>
 #include <string>
 #include <unordered_map>
@@ -65,7 +64,7 @@ void register_include_location(const char *file_name, const char *dir_name) {
       // +1 for path separator.
       normalized_files[file_std] = file_std.substr(folder_std.size() + 1);
     } else {
-      fprintf(stderr, "Externis error! Can't normalize paths %s and %s\n",
+      fprintf(stderr, "Externis warning: Can't normalize paths %s and %s\n",
               file_name, dir_name);
     }
   }
@@ -125,14 +124,20 @@ void start_preprocess_file(const char *file_name, cpp_reader *pfile) {
     auto cpp_file = cpp_get_file(cpp_buffer);
     auto dir = cpp_get_dir(cpp_file);
     auto real_dir_name = realpath(dir->name, nullptr);
-    if (real_dir_name) {
-      register_include_location(file_name, real_dir_name);
-      free(real_dir_name);
+    auto real_file_name = realpath(file_name, nullptr);
+    if (real_dir_name && real_file_name) {
+      register_include_location(real_file_name, real_dir_name);
     } else {
       if (strcmp(dir->name, "")) {
         fprintf(stderr, "Externis error! Couldn't call realpath(\"%s\")\n",
                 dir->name);
       }
+    }
+    if (real_dir_name) {
+      free(real_dir_name);
+    }
+    if (real_file_name) {
+      free(real_file_name);
     }
   }
 }

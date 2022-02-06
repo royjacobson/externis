@@ -79,7 +79,7 @@ void write_preprocessing_events();
 void start_opt_pass(const opt_pass *pass);
 void write_opt_pass_events();
 
-bool set_output_file(const char *file_name);
+void set_output_file(FILE* file);
 void add_event(const TraceEvent &event);
 void write_all_events();
 void write_event(const TraceEvent &, bool);

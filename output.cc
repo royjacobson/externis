@@ -17,7 +17,6 @@
  */
 
 #include "externis.h"
-#include <fmt/core.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -35,7 +34,7 @@ const char *category_string(EventCategory cat) {
   return strings[(int)cat];
 }
 
-json::object *new_event(const TraceEvent &event, int pid, TimeStamp ts,
+json::object *new_event(const TraceEvent &event, int pid, int tid, TimeStamp ts,
                         const char *phase, int this_uid) {
   json::object *json_event = new json::object;
   json_event->set("name", new json::string(event.name));
@@ -43,7 +42,7 @@ json::object *new_event(const TraceEvent &event, int pid, TimeStamp ts,
   json_event->set("cat", new json::string(category_string(event.category)));
   json_event->set("ts", new json::integer_number(ts));
   json_event->set("pid", new json::integer_number(pid));
-  json_event->set("tid", new json::integer_number(0));
+  json_event->set("tid", new json::integer_number(tid));
   json::object *args = new json::object();
   args->set("UID", new json::integer_number(this_uid));
   if (event.args) {
@@ -56,31 +55,29 @@ json::object *new_event(const TraceEvent &event, int pid, TimeStamp ts,
 }
 } // namespace
 
-bool set_output_file(const char *file_name) {
-  trace_file = std::fopen(file_name, "w");
-  if (trace_file) {
-    output_json = new json::object();
-    output_json->set("displayTimeUnit", new json::string("ns"));
-    output_json->set("beginningOfTime",
-                     new json::integer_number(
-                         std::chrono::duration_cast<std::chrono::nanoseconds>(
-                             COMPILATION_START.time_since_epoch())
-                             .count()));
-    output_json->set("traceEvents", new json::array());
+void set_output_file(FILE* file) {
+  trace_file = file;
+  output_json = new json::object();
+  output_json->set("displayTimeUnit", new json::string("ns"));
+  output_json->set("beginningOfTime",
+                    new json::integer_number(
+                        std::chrono::duration_cast<std::chrono::nanoseconds>(
+                            COMPILATION_START.time_since_epoch())
+                            .count()));
+  output_json->set("traceEvents", new json::array());
 
-    output_events_list = (json::array *)output_json->get("traceEvents");
-  }
-  return trace_file != nullptr;
+  output_events_list = (json::array *)output_json->get("traceEvents");
 }
 
 void add_event(const TraceEvent &event) {
   static int pid = getpid();
+  static int tid = 0;
   static int UID = 0;
   int this_uid = UID++;
   output_events_list->append(
-      new_event(event, pid, event.ts.start, "B", this_uid));
+      new_event(event, pid, tid, event.ts.start, "B", this_uid));
   output_events_list->append(
-      new_event(event, pid, event.ts.end, "E", this_uid));
+      new_event(event, pid, tid, event.ts.end, "E", this_uid));
 }
 
 void write_all_events() {

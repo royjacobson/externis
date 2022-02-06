@@ -18,7 +18,6 @@
 #include "externis.h"
 
 #include <cp/cp-tree.h>
-#include <fmt/core.h>
 #include <options.h>
 #include <tree-check.h>
 #include <tree-pass.h>
@@ -103,14 +102,36 @@ bool setup_output(int argc, plugin_argument *argv) {
   // added or something else predictable. (Clang are replacing suffix with
   // .json)
   // TODO: Validate we only compile one TU at a time.
-  if (argc != 1 || strcmp(argv[0].key, flag_name)) {
-    fprintf(stderr, "%s Error! Must provide -fplugin-arg-%s-%s=FILENAME",
-            PLUGIN_NAME, PLUGIN_NAME, flag_name);
-    return 1;
-  }
-  if (!externis::set_output_file(argv[0].value)) {
-    fprintf(stderr, "%s Error! Couldn't open %s for writing!", PLUGIN_NAME,
+  FILE *trace_file = nullptr;
+  if (argc == 0) {
+    char file_template[] = "/tmp/trace_XXXXXX.json";
+    int fd = mkstemps(file_template, 5);
+    if (fd == -1) {
+      perror("Externis mkstemps error: ");
+      return false;
+    }
+    trace_file = fdopen(fd, "w");
+  } else if (argc == 1) {
+    if (strcmp(argv[0].key, flag_name)) {
+      fprintf(stderr, "Externis Error! Arguments must be -fplugin-arg-%s-%s=FILENAME",
+              PLUGIN_NAME, flag_name);
+      return false;
+    }
+    trace_file = fopen(argv[0].value, "w");
+    if (!trace_file) {
+      fprintf(stderr, "Externis Error! Couldn't open %s for writing!",
             argv[0].value);
+    }
+  } else {
+    fprintf(stderr, "Externis Error! Arguments must be -fplugin-arg-%s-%s=FILENAME",
+              PLUGIN_NAME, flag_name);
+      return false;
+  }
+  if (trace_file) {
+    externis::set_output_file(trace_file);
+    return true;
+  } else {
+    return false;
   }
 }
 
@@ -120,7 +141,9 @@ int plugin_init(struct plugin_name_args *plugin_info,
   static struct plugin_info externis_info = {
       .version = "0.1", .help = "Generate time traces of the compilation."};
   externis::COMPILATION_START = externis::clock_t::now();
-  setup_output(plugin_info->argc, plugin_info->argv);
+  if (!setup_output(plugin_info->argc, plugin_info->argv)) {
+    return -1;
+  }
 
   register_callback(PLUGIN_NAME, PLUGIN_FINISH_PARSE_FUNCTION,
                     &externis::cb_finish_parse_function, nullptr);
