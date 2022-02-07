@@ -22,7 +22,7 @@
 
 namespace externis {
 
-constexpr int MINIMUM_EVENT_LENGTH_NS = 1000000; // 0.1ms
+constexpr int MINIMUM_EVENT_LENGTH_NS = 1000000; // 1ms
 
 namespace {
 
