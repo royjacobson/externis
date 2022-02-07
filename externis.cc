@@ -115,19 +115,21 @@ bool setup_output(int argc, plugin_argument *argv) {
     trace_file = fdopen(fd, "w");
   } else if (argc == 1) {
     if (strcmp(argv[0].key, flag_name)) {
-      fprintf(stderr, "Externis Error! Arguments must be -fplugin-arg-%s-%s=FILENAME",
+      fprintf(stderr,
+              "Externis Error! Arguments must be -fplugin-arg-%s-%s=FILENAME",
               PLUGIN_NAME, flag_name);
       return false;
     }
     trace_file = fopen(argv[0].value, "w");
     if (!trace_file) {
       fprintf(stderr, "Externis Error! Couldn't open %s for writing!",
-            argv[0].value);
+              argv[0].value);
     }
   } else {
-    fprintf(stderr, "Externis Error! Arguments must be -fplugin-arg-%s-%s=FILENAME",
-              PLUGIN_NAME, flag_name);
-      return false;
+    fprintf(stderr,
+            "Externis Error! Arguments must be -fplugin-arg-%s-%s=FILENAME",
+            PLUGIN_NAME, flag_name);
+    return false;
   }
   if (trace_file) {
     externis::set_output_file(trace_file);
@@ -155,8 +157,8 @@ int plugin_init(struct plugin_name_args *plugin_info,
                     &externis::cb_pass_execution, nullptr);
   register_callback(PLUGIN_NAME, PLUGIN_START_UNIT,
                     &externis::cb_start_compilation, nullptr);
-  register_callback(PLUGIN_NAME, PLUGIN_FINISH_DECL,
-                    &externis::cb_finish_decl, nullptr);
+  register_callback(PLUGIN_NAME, PLUGIN_FINISH_DECL, &externis::cb_finish_decl,
+                    nullptr);
   register_callback(PLUGIN_NAME, PLUGIN_INFO, nullptr, &externis_info);
   return 0;
 }

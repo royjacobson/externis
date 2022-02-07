@@ -21,7 +21,6 @@
 
 #include <stack>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 #include "c-family/c-pragma.h"
@@ -35,6 +34,7 @@ namespace {
 map_t<std::string, int64_t> preprocess_start;
 map_t<std::string, int64_t> preprocess_end;
 std::stack<std::string> preprocessing_stack;
+const char *CIRCULAR_POISON_VALUE = "CIRCULAR_POISON_VALUE_95d6021c";
 
 TimeStamp last_function_parsed_ts;
 
@@ -46,7 +46,9 @@ OptPassEvent last_pass;
 std::vector<OptPassEvent> pass_events;
 
 map_t<std::string, std::string> file_to_include_directory;
-map_t<std::string, std::string> normalized_files;
+map_t<std::string, std::string> normalized_files_map;
+set_t<std::string> normalized_files;
+set_t<std::string> conflicted_files;
 
 void register_include_location(const char *file_name, const char *dir_name) {
   if (!file_to_include_directory.contains(file_name)) {
@@ -55,7 +57,13 @@ void register_include_location(const char *file_name, const char *dir_name) {
     auto &folder_std = file_to_include_directory[file_std];
     if (file_std.starts_with(folder_std)) {
       // +1 for path separator.
-      normalized_files[file_std] = file_std.substr(folder_std.size() + 1);
+      auto normalized_file = file_std.substr(folder_std.size() + 1);
+      normalized_files_map[file_std] = normalized_file;
+      if (normalized_files.contains(normalized_file)) {
+        conflicted_files.insert(normalized_file);
+      } else {
+        normalized_files.insert(normalized_file);
+      }
     } else {
       fprintf(stderr, "Externis warning: Can't normalize paths %s and %s\n",
               file_name, dir_name);
@@ -64,8 +72,9 @@ void register_include_location(const char *file_name, const char *dir_name) {
 }
 
 const char *normalized_file_name(const char *file_name) {
-  if (normalized_files.contains(file_name)) {
-    return normalized_files[file_name].data();
+  if (normalized_files_map.contains(file_name) and
+      !conflicted_files.contains(normalized_files_map[file_name])) {
+    return normalized_files_map[file_name].data();
   } else {
     return file_name;
   }
@@ -114,9 +123,20 @@ void start_preprocess_file(const char *file_name, cpp_reader *pfile) {
   if (!strcmp(file_name, "<command-line>")) {
     return;
   }
+  if (preprocess_start.contains(file_name) &&
+      !preprocess_end.contains(file_name)) {
+    // This is an edge case - this means that file_name is somewhere down the
+    // stack and we have a circular include. Big fun!
+    // Because we don't want to add the inner include, we replace file_name
+    // with a poison value and set pfile to nullptr.
+    file_name = CIRCULAR_POISON_VALUE;
+    pfile = nullptr;
+  }
+
   if (!preprocess_start.contains(file_name)) {
     preprocess_start[file_name] = now;
   }
+
   preprocessing_stack.push(file_name);
   // This finds out which folder the file was included from.
   if (pfile) {
@@ -152,8 +172,11 @@ void end_preprocess_file() {
 }
 
 void write_preprocessing_events() {
-  finish_preprocessing_stage(); // Should've already happened, by in any case.
+  finish_preprocessing_stage(); // Should've already happened, but in any case.
   for (const auto &[file, start] : preprocess_start) {
+    if (file == CIRCULAR_POISON_VALUE) {
+      continue;
+    }
     int64_t end = preprocess_end.at(file);
     add_event(TraceEvent{normalized_file_name(file.data()),
                          EventCategory::PREPROCESS,

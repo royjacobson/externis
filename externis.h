@@ -25,13 +25,15 @@
 #include <pretty-print.h>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace externis {
 
-// This is an alias so it's easily replacable with something else (like
-// absl::flat_hash_map) if needed. Not doing it by default because I don't want
-// extra dependencies.
+// Those are aliases so they're easily replacable with something else (like
+// absl::flat_hash_map) if needed. Not doing it by default to keep minimal
+// dependencies.
 template <class Key, class Value> using map_t = std::unordered_map<Key, Value>;
+template <class Value> using set_t = std::unordered_set<Value>;
 
 using clock_t = std::chrono::high_resolution_clock;
 using time_point_t = std::chrono::time_point<clock_t>;
@@ -79,7 +81,7 @@ void write_preprocessing_events();
 void start_opt_pass(const opt_pass *pass);
 void write_opt_pass_events();
 
-void set_output_file(FILE* file);
+void set_output_file(FILE *file);
 void add_event(const TraceEvent &event);
 void write_all_events();
 void write_event(const TraceEvent &, bool);

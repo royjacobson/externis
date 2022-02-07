@@ -58,15 +58,15 @@ json::object *new_event(const TraceEvent &event, int pid, int tid, TimeStamp ts,
 }
 } // namespace
 
-void set_output_file(FILE* file) {
+void set_output_file(FILE *file) {
   trace_file = file;
   output_json = new json::object();
   output_json->set("displayTimeUnit", new json::string("ns"));
   output_json->set("beginningOfTime",
-                    new json::integer_number(
-                        std::chrono::duration_cast<std::chrono::nanoseconds>(
-                            COMPILATION_START.time_since_epoch())
-                            .count()));
+                   new json::integer_number(
+                       std::chrono::duration_cast<std::chrono::nanoseconds>(
+                           COMPILATION_START.time_since_epoch())
+                           .count()));
   output_json->set("traceEvents", new json::array());
 
   output_events_list = (json::array *)output_json->get("traceEvents");

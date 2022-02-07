@@ -13,17 +13,7 @@ target_link_libraries(externis PRIVATE fmt::fmt)
 set_target_properties(externis PROPERTIES CXX_STANDARD 20)
 set_target_properties(externis PROPERTIES COMPILE_FLAGS "-fno-rtti -g -Wall")
 set_target_properties(externis PROPERTIES PREFIX "" OUTPUT_NAME "externis")
+set(EXTERNIS_PLUGIN_PATH ${CMAKE_BINARY_DIR}/externis.so)
 install(TARGETS externis DESTINATION ${GCC_PLUGIN_INCLUDE})
 
-
-add_executable(test test.cc)
-set_target_properties(test PROPERTIES COMPILE_FLAGS "-fplugin=${CMAKE_BINARY_DIR}/externis.so -fplugin-arg-externis-trace=${CMAKE_SOURCE_DIR}/trace.json")
-add_dependencies(test externis)
-
-add_custom_target(
-    remove_test ALL
-    COMMAND rm ${CMAKE_BINARY_DIR}/test 
-    COMMAND rm CMakeFiles/test.dir/test.cc.o
-    COMMAND echo "Removed!"
-    DEPENDS test
-)
+add_subdirectory(test)
