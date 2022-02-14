@@ -5,11 +5,15 @@ exec_program(gcc ARGS "-print-file-name=plugin" OUTPUT_VARIABLE GCC_PLUGIN_INCLU
 
 message("GCC plugin headers found in " ${GCC_PLUGIN_INCLUDE})
 
-find_package(fmt)
-
 add_library(externis SHARED externis.cc tracking.cc output.cc)
 target_include_directories(externis PRIVATE ${GCC_PLUGIN_INCLUDE}/include)
-target_link_libraries(externis PRIVATE fmt::fmt)
+
+# Optional, useful for debugging.
+find_package(fmt)
+if (fmt_FOUND)
+    target_link_libraries(externis PRIVATE fmt::fmt)
+endif()
+
 set_target_properties(externis PROPERTIES CXX_STANDARD 20)
 set_target_properties(externis PROPERTIES COMPILE_FLAGS "-fno-rtti -g -Wall")
 set_target_properties(externis PROPERTIES PREFIX "" OUTPUT_NAME "externis")
