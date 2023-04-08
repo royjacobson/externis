@@ -120,7 +120,7 @@ void finish_preprocessing_stage() {
 
 void start_preprocess_file(const char *file_name, cpp_reader *pfile) {
   auto now = ns_from_start();
-  if (!strcmp(file_name, "<command-line>")) {
+  if (!file_name || !strcmp(file_name, "<command-line>")) {
     return;
   }
   if (preprocess_start.contains(file_name) &&
