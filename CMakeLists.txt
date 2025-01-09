@@ -1,7 +1,11 @@
 cmake_minimum_required(VERSION 3.12)
 project(externis)
 
-exec_program(gcc ARGS "-print-file-name=plugin" OUTPUT_VARIABLE GCC_PLUGIN_INCLUDE)
+execute_process(
+    COMMAND gcc -print-file-name=plugin
+    OUTPUT_VARIABLE GCC_PLUGIN_INCLUDE
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
 
 message("GCC plugin headers found in " ${GCC_PLUGIN_INCLUDE})
 
