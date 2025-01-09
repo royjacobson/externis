@@ -17,6 +17,7 @@
  */
 
 #include "externis.h"
+#include <plugin-version.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -94,7 +95,11 @@ void write_all_events() {
   write_all_functions();
   write_all_scopes();
 
+#if GCCPLUGIN_VERSION_MAJOR >= 14
+  output_json->dump(trace_file, /*formatted=*/false);
+#else
   output_json->dump(trace_file);
+#endif
   fclose(trace_file);
 
   output_events_list = nullptr;
