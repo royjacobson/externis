@@ -122,12 +122,12 @@ bool setup_output(int argc, plugin_argument *argv) {
     }
     trace_file = fopen(argv[0].value, "w");
     if (!trace_file) {
-      fprintf(stderr, "Externis Error! Couldn't open %s for writing!",
+      fprintf(stderr, "Externis Error! Couldn't open %s for writing\n",
               argv[0].value);
     }
   } else {
     fprintf(stderr,
-            "Externis Error! Arguments must be -fplugin-arg-%s-%s=FILENAME",
+            "Externis Error! Arguments must be -fplugin-arg-%s-%s=FILENAME\n",
             PLUGIN_NAME, flag_name);
     return false;
   }
