@@ -44,7 +44,9 @@ json::object *new_event(const TraceEvent &event, int pid, int tid, TimeStamp ts,
   json_event->set("name", new json::string(event.name));
   json_event->set("ph", new json::string(phase));
   json_event->set("cat", new json::string(category_string(event.category)));
-  json_event->set("ts", new json::integer_number(ts));
+  // Timestamps are in nanoseconds, JSON format is in microseconds.
+  json_event->set("ts",
+                  new json::float_number(static_cast<double>(ts) * 0.001L));
   json_event->set("pid", new json::integer_number(pid));
   json_event->set("tid", new json::integer_number(tid));
   json::object *args = new json::object();
@@ -65,7 +67,7 @@ void set_output_file(FILE *file) {
   output_json->set("displayTimeUnit", new json::string("ns"));
   output_json->set("beginningOfTime",
                    new json::integer_number(
-                       std::chrono::duration_cast<std::chrono::nanoseconds>(
+                       std::chrono::duration_cast<std::chrono::microseconds>(
                            COMPILATION_START.time_since_epoch())
                            .count()));
   output_json->set("traceEvents", new json::array());
