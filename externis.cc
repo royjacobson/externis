@@ -22,6 +22,7 @@
 #include <tree-check.h>
 #include <tree-pass.h>
 #include <tree.h>
+#include <string>
 
 #include "c-family/c-pragma.h"
 #include "cpplib.h"
@@ -106,8 +107,13 @@ bool setup_output(int argc, plugin_argument *argv) {
   // TODO: Validate we only compile one TU at a time.
   FILE *trace_file = nullptr;
   if (argc == 0) {
-    char file_template[] = "/tmp/trace_XXXXXX.json";
-    int fd = mkstemps(file_template, 5);
+    static constexpr auto default_directory = "/tmp";
+    const char* directory = getenv("EXTERNIS_OUTPUT_DIR"); 
+    if (!directory) {
+      directory = default_directory;
+    }
+    std::string file_template = std::string(default_directory) + "/trace_XXXXXX.json";
+    int fd = mkstemps(file_template.data(), 5);
     if (fd == -1) {
       perror("Externis mkstemps error: ");
       return false;
