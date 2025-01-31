@@ -22,7 +22,6 @@
 #include <tree-check.h>
 #include <tree-pass.h>
 #include <tree.h>
-#include <string>
 
 #include "c-family/c-pragma.h"
 #include "cpplib.h"
@@ -103,38 +102,37 @@ static const char *PLUGIN_NAME = "externis";
 
 bool setup_output(int argc, plugin_argument *argv) {
   const char *flag_name = "trace";
+  const char *dir_flag_name = "trace-dir";
   // TODO: Maybe make the default filename related to the source filename.
   // TODO: Validate we only compile one TU at a time.
   FILE *trace_file = nullptr;
   if (argc == 0) {
-    static constexpr auto default_directory = "/tmp";
-    const char* directory = getenv("EXTERNIS_OUTPUT_DIR"); 
-    if (!directory) {
-      directory = default_directory;
-    }
-    std::string file_template = std::string(default_directory) + "/trace_XXXXXX.json";
-    int fd = mkstemps(file_template.data(), 5);
+    char file_template[] = "/tmp/trace_XXXXXX.json";
+    int fd = mkstemps(file_template, 5);
     if (fd == -1) {
       perror("Externis mkstemps error: ");
       return false;
     }
     trace_file = fdopen(fd, "w");
-  } else if (argc == 1) {
-    if (strcmp(argv[0].key, flag_name)) {
-      fprintf(stderr,
-              "Externis Error! Arguments must be -fplugin-arg-%s-%s=FILENAME",
-              PLUGIN_NAME, flag_name);
-      return false;
-    }
+  } else if (argc == 1 && !strcmp(argv[0].key, flag_name)) {
     trace_file = fopen(argv[0].value, "w");
     if (!trace_file) {
       fprintf(stderr, "Externis Error! Couldn't open %s for writing\n",
               argv[0].value);
     }
+  } else if (argc == 1 && !strcmp(argv[0].key, dir_flag_name)) {
+    std::string file_template{argv[0].value};
+    file_template += "/trace_XXXXXX.json";
+    int fd = mkstemps(file_template, 5);
+    if (fd == -1) {
+      perror("Externis mkstemps error: ");
+      return false;
+    }
+    trace_file = fdopen(fd, "w");
   } else {
     fprintf(stderr,
-            "Externis Error! Arguments must be -fplugin-arg-%s-%s=FILENAME\n",
-            PLUGIN_NAME, flag_name);
+            "Externis Error! Arguments must be -fplugin-arg-%s-%s=FILENAME or -fplugin-arg-%s-%s=DIRECTORY\n",
+            PLUGIN_NAME, flag_name, PLUGIN_NAME, dir_flag_name);
     return false;
   }
   if (trace_file) {
