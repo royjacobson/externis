@@ -123,7 +123,7 @@ bool setup_output(int argc, plugin_argument *argv) {
   } else if (argc == 1 && !strcmp(argv[0].key, dir_flag_name)) {
     std::string file_template{argv[0].value};
     file_template += "/trace_XXXXXX.json";
-    int fd = mkstemps(file_template, 5);
+    int fd = mkstemps(file_template.data(), 5);
     if (fd == -1) {
       perror("Externis mkstemps error: ");
       return false;
