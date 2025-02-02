@@ -61,7 +61,12 @@ gcc <regular arguments> -fplugin=externis -fplugin-arg-externis-trace=SOME_PATH/
 # Otherwise:
 gcc <regular arguments> -fplugin=/PATH/TO/build/externis.so -fplugin-arg-externis-trace=SOME_PATH/trace.json
 ```
-If a trace output path is not given, a temporary file with the name
+Alternatively, you can specify a directory to write the files to: 
+```bash 
+gcc <regular arguments> -fplugin=/PATH/TO/build/externis.so -fplugin-arg-externis-trace-dir=SOME_PATH/
+```
+In which case the output will be written to SOME_PATH/trace_XXXXXX.json
+If a trace output path or directory is not given, a temporary file with the name
 `/tmp/trace_XXXXXX.json` will be used instead.
 
 ## License & Copyright
