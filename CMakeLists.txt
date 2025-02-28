@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.12)
 project(externis)
 
+option(EXTERNIS_BUILD_TEST "Build the compiler plugin test" ON)
+
 if(NOT GCC_PLUGIN_INCLUDE)
     execute_process(
         COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=plugin
@@ -31,7 +33,9 @@ set_target_properties(externis PROPERTIES PREFIX "" OUTPUT_NAME "externis")
 set(EXTERNIS_PLUGIN_PATH ${CMAKE_BINARY_DIR}/externis.so)
 install(TARGETS externis DESTINATION ${GCC_PLUGIN_INCLUDE})
 
-add_subdirectory(test)
+if(EXTERNIS_BUILD_TEST)
+    add_subdirectory(test)
 
-add_custom_target(wait_for_externis DEPENDS ${EXTERNIS_PLUGIN_PATH})
-add_dependencies(test wait_for_externis)
+    add_custom_target(wait_for_externis DEPENDS ${EXTERNIS_PLUGIN_PATH})
+    add_dependencies(test wait_for_externis)
+endif()
