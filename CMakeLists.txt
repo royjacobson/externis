@@ -36,6 +36,17 @@ install(TARGETS externis DESTINATION ${EXTERNIS_GCC_PLUGIN_DIR})
 if(EXTERNIS_BUILD_TEST)
     add_subdirectory(test)
 
-    add_custom_target(wait_for_externis DEPENDS ${EXTERNIS_PLUGIN_PATH})
-    add_dependencies(test wait_for_externis)
+    # When building with Ninja, the dependency tree for add_dependencies(test externis) sets up a
+    # rule the link step for test must run after the link step for externis; but that doesn't work
+    # because the compilation steps for test require externis
+    #
+    # However, using the custom target that depends on externis.so fails with GNU Make, because
+    # recursive GNU make doesn't have the knowledge to build files cross-directory; but using
+    # add_dependencies orders things correctly with GNU Make
+    if(CMAKE_GENERATOR STREQUAL "Ninja")
+        add_custom_target(wait_for_externis DEPENDS $<TARGET_FILE:externis>)
+        add_dependencies(test wait_for_externis)
+    else()
+        add_dependencies(test externis)
+    endif()
 endif()
