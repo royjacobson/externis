@@ -51,6 +51,23 @@ sudo make install
 
 Prebuilt binaries may be provided in the future.
 
+### Cross-Compilation
+
+By default, the externis build will execute
+`${CMAKE_CXX_COMPILER} -print-file-name=plugin` to determine the location of
+the gcc plugin header and plugin install location. If you plan to use externis
+with the compiler that you use to build externis, this works just fine; however,
+if you want to build externis for use with a different `g++` (for example,
+`g++-arm-none-eabi`), this will not work.
+
+To build externis for use with some other `g++`, find the plugin dir for that
+gcc (You can run `g++-arm-none-eabi -print-file-name=plugin` yourself), and
+configure externis with `-DEXTERNIS_GCC_PLUGIN_DIR=[that path]`, or for
+shorthand, use
+`cmake -DEXTERNIS_GCC_PLUGIN_DIR=$([your g++] -print-file-name=plugin)`. When
+doing this, it will likely also be necessary to use `-DEXTERNIS_BUILD_TEST=OFF`
+to disable the build test validates externis.
+
 ## Usage
 
 After building the plugin, you can use it by passing the following additional
@@ -61,8 +78,8 @@ gcc <regular arguments> -fplugin=externis -fplugin-arg-externis-trace=SOME_PATH/
 # Otherwise:
 gcc <regular arguments> -fplugin=/PATH/TO/build/externis.so -fplugin-arg-externis-trace=SOME_PATH/trace.json
 ```
-Alternatively, you can specify a directory to write the files to: 
-```bash 
+Alternatively, you can specify a directory to write the files to:
+```bash
 gcc <regular arguments> -fplugin=/PATH/TO/build/externis.so -fplugin-arg-externis-trace-dir=SOME_PATH/
 ```
 In which case the output will be written to SOME_PATH/trace_XXXXXX.json
