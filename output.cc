@@ -90,8 +90,10 @@ void add_event(const TraceEvent &event) {
 }
 
 void write_all_events() {
-  add_event(
-      TraceEvent{"TU", EventCategory::TU, {0, ns_from_start()}, std::nullopt});
+  add_event(TraceEvent{main_input_filename,
+                       EventCategory::TU,
+                       {0, ns_from_start()},
+                       std::nullopt});
   write_preprocessing_events();
   write_opt_pass_events();
   write_all_functions();
