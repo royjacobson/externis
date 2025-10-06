@@ -90,7 +90,7 @@ void add_event(const TraceEvent &event) {
 }
 
 void write_all_events() {
-  add_event(TraceEvent{main_input_filename,
+  add_event(TraceEvent{main_input_filename ? main_input_filename : "TU",
                        EventCategory::TU,
                        {0, ns_from_start()},
                        std::nullopt});
