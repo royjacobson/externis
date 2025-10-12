@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 project(externis)
 
 option(EXTERNIS_BUILD_TEST "Build the compiler plugin test" ON)
+option(EXTERNIS_INSTALL_TO_PLUGIN_DIR "Install Externis into the GCC plugin directory" ON)
 
 if(NOT EXTERNIS_GCC_PLUGIN_DIR)
     execute_process(
@@ -31,7 +32,12 @@ set_target_properties(externis PROPERTIES COMPILE_FLAGS "-fno-rtti -g -Wall")
 set_target_properties(externis PROPERTIES PREFIX "" OUTPUT_NAME "externis")
 
 set(EXTERNIS_PLUGIN_PATH ${CMAKE_BINARY_DIR}/externis.so)
-install(TARGETS externis DESTINATION ${EXTERNIS_GCC_PLUGIN_DIR})
+
+if (EXTERNIS_INSTALL_TO_PLUGIN_DIR)
+    install(TARGETS externis DESTINATION ${EXTERNIS_GCC_PLUGIN_DIR})
+else()
+    install(TARGETS externis)
+endif()
 
 if(EXTERNIS_BUILD_TEST)
     add_subdirectory(test)

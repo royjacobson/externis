@@ -39,8 +39,7 @@ The requirements for building Externis are:
     similar to get the GCC plugin headers installed.
  3. **CMake** (but barely).
 
-After downloading the source code, you can build and install the plugin into
-GCC's plugin directory with
+After downloading the source code, you can build and install the plugin with
 
 ```bash
 mkdir build && cd build
@@ -48,6 +47,8 @@ cmake ..
 make externis
 sudo make install
 ```
+
+By default, Externis is installed into GCC's plugin directory, but you can control this behaviour with the CMake option `EXTERNIS_INSTALL_TO_PLUGIN_DIR`.
 
 Prebuilt binaries may be provided in the future.
 
